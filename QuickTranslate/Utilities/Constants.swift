@@ -17,7 +17,7 @@ enum APIProvider: String, CaseIterable, Identifiable {
     var defaultModel: String {
         switch self {
         case .claude: return "claude-sonnet-4-5"
-        case .openRouter: return "anthropic/claude-3.5-sonnet"
+        case .openRouter: return "anthropic/claude-sonnet-4.6"
         }
     }
 
@@ -27,12 +27,12 @@ enum APIProvider: String, CaseIterable, Identifiable {
             return ["claude-sonnet-4-5", "claude-haiku-4-5"]
         case .openRouter:
             return [
-                "anthropic/claude-3.5-sonnet",
-                "anthropic/claude-3.5-haiku",
-                "openai/gpt-4o",
-                "openai/gpt-4o-mini",
-                "google/gemini-2.0-flash-001",
-                "meta-llama/llama-4-maverick"
+                "anthropic/claude-sonnet-4.6",
+                "anthropic/claude-opus-4.6",
+                "openai/gpt-5",
+                "openai/gpt-4.1-mini",
+                "google/gemini-3.1-flash-lite-preview",
+                "google/gemini-2.5-flash"
             ]
         }
     }
