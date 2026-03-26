@@ -1,6 +1,6 @@
 import Foundation
 
-enum ClaudeAPIError: LocalizedError {
+enum TranslationAPIError: LocalizedError {
     case noAPIKey
     case invalidURL
     case networkError(String)
@@ -26,7 +26,7 @@ enum ClaudeAPIError: LocalizedError {
     }
 }
 
-actor ClaudeAPIService {
+actor TranslationService {
     private let session: URLSession
 
     init() {
@@ -37,12 +37,25 @@ actor ClaudeAPIService {
     }
 
     func translate(text: String, from sourceLang: String, to targetLang: String, model: String) async throws -> String {
-        guard let apiKey = KeychainManager.load(), !apiKey.isEmpty else {
-            throw ClaudeAPIError.noAPIKey
+        let provider = APIProvider.current()
+
+        guard let apiKey = KeychainManager.load(for: provider), !apiKey.isEmpty else {
+            throw TranslationAPIError.noAPIKey
         }
 
-        guard let url = URL(string: Constants.apiURL) else {
-            throw ClaudeAPIError.invalidURL
+        switch provider {
+        case .claude:
+            return try await translateWithClaude(text: text, from: sourceLang, to: targetLang, model: model, apiKey: apiKey)
+        case .openRouter:
+            return try await translateWithOpenRouter(text: text, from: sourceLang, to: targetLang, model: model, apiKey: apiKey)
+        }
+    }
+
+    // MARK: - Claude API
+
+    private func translateWithClaude(text: String, from sourceLang: String, to targetLang: String, model: String, apiKey: String) async throws -> String {
+        guard let url = URL(string: APIProvider.claude.apiURL) else {
+            throw TranslationAPIError.invalidURL
         }
 
         var request = URLRequest(url: url)
@@ -64,42 +77,87 @@ actor ClaudeAPIService {
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let data: Data
-        let response: URLResponse
-        do {
-            (data, response) = try await session.data(for: request)
-        } catch let error as URLError where error.code == .timedOut {
-            throw ClaudeAPIError.timeout
-        } catch {
-            throw ClaudeAPIError.networkError(error.localizedDescription)
-        }
+        let (data, response) = try await performRequest(request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw ClaudeAPIError.invalidResponse
+            throw TranslationAPIError.invalidResponse
         }
 
         guard httpResponse.statusCode == 200 else {
-            if let errorBody = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let errorInfo = errorBody["error"] as? [String: Any],
-               let message = errorInfo["message"] as? String {
-                throw ClaudeAPIError.apiError(message)
-            }
-            throw ClaudeAPIError.apiError("HTTP \(httpResponse.statusCode)")
+            throw parseError(data: data, statusCode: httpResponse.statusCode)
         }
 
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let content = json["content"] as? [[String: Any]],
               let firstBlock = content.first,
               let translatedText = firstBlock["text"] as? String else {
-            throw ClaudeAPIError.invalidResponse
+            throw TranslationAPIError.invalidResponse
         }
 
         return translatedText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    func testConnection(apiKey: String) async throws -> Bool {
-        guard let url = URL(string: Constants.apiURL) else {
-            throw ClaudeAPIError.invalidURL
+    // MARK: - OpenRouter API
+
+    private func translateWithOpenRouter(text: String, from sourceLang: String, to targetLang: String, model: String, apiKey: String) async throws -> String {
+        guard let url = URL(string: APIProvider.openRouter.apiURL) else {
+            throw TranslationAPIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "content-type")
+        request.setValue("QuickTranslate", forHTTPHeaderField: "X-Title")
+
+        let systemPrompt = "You are a translator. Translate the following text from \(sourceLang) to \(targetLang). Return only the translated text, nothing else."
+
+        let body: [String: Any] = [
+            "model": model,
+            "max_tokens": 4096,
+            "messages": [
+                ["role": "system", "content": systemPrompt],
+                ["role": "user", "content": text]
+            ]
+        ]
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await performRequest(request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw TranslationAPIError.invalidResponse
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            throw parseError(data: data, statusCode: httpResponse.statusCode)
+        }
+
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let choices = json["choices"] as? [[String: Any]],
+              let firstChoice = choices.first,
+              let message = firstChoice["message"] as? [String: Any],
+              let translatedText = message["content"] as? String else {
+            throw TranslationAPIError.invalidResponse
+        }
+
+        return translatedText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    // MARK: - Test Connection
+
+    func testConnection(apiKey: String, provider: APIProvider) async throws -> Bool {
+        switch provider {
+        case .claude:
+            return try await testClaude(apiKey: apiKey)
+        case .openRouter:
+            return try await testOpenRouter(apiKey: apiKey)
+        }
+    }
+
+    private func testClaude(apiKey: String) async throws -> Bool {
+        guard let url = URL(string: APIProvider.claude.apiURL) else {
+            throw TranslationAPIError.invalidURL
         }
 
         var request = URLRequest(url: url)
@@ -109,21 +167,62 @@ actor ClaudeAPIService {
         request.setValue("application/json", forHTTPHeaderField: "content-type")
 
         let body: [String: Any] = [
-            "model": Constants.defaultModel,
+            "model": APIProvider.claude.defaultModel,
             "max_tokens": 16,
-            "messages": [
-                ["role": "user", "content": "Hi"]
-            ]
+            "messages": [["role": "user", "content": "Hi"]]
         ]
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
         let (_, response) = try await session.data(for: request)
-
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw ClaudeAPIError.invalidResponse
+            throw TranslationAPIError.invalidResponse
+        }
+        return httpResponse.statusCode == 200
+    }
+
+    private func testOpenRouter(apiKey: String) async throws -> Bool {
+        guard let url = URL(string: APIProvider.openRouter.apiURL) else {
+            throw TranslationAPIError.invalidURL
         }
 
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "content-type")
+        request.setValue("QuickTranslate", forHTTPHeaderField: "X-Title")
+
+        let body: [String: Any] = [
+            "model": APIProvider.openRouter.defaultModel,
+            "max_tokens": 16,
+            "messages": [["role": "user", "content": "Hi"]]
+        ]
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (_, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw TranslationAPIError.invalidResponse
+        }
         return httpResponse.statusCode == 200
+    }
+
+    // MARK: - Helpers
+
+    private func performRequest(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        do {
+            return try await session.data(for: request)
+        } catch let error as URLError where error.code == .timedOut {
+            throw TranslationAPIError.timeout
+        } catch {
+            throw TranslationAPIError.networkError(error.localizedDescription)
+        }
+    }
+
+    private func parseError(data: Data, statusCode: Int) -> TranslationAPIError {
+        if let errorBody = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let errorInfo = errorBody["error"] as? [String: Any],
+           let message = errorInfo["message"] as? String {
+            return .apiError(message)
+        }
+        return .apiError("HTTP \(statusCode)")
     }
 }

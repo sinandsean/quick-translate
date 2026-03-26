@@ -3,7 +3,7 @@ import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let hotkeyManager = HotkeyManager()
-    private let apiService = ClaudeAPIService()
+    private let apiService = TranslationService()
     private var floatingPanel: FloatingPanel?
     let appState = AppState()
     private var isProcessing = false

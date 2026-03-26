@@ -2,17 +2,14 @@ import SwiftUI
 import Carbon
 
 struct SettingsView: View {
+    @State private var selectedProvider: APIProvider = .current()
     @State private var apiKey: String = ""
     @State private var testStatus: TestStatus = .idle
-    @State private var selectedModel: String = Constants.defaultModel
+    @State private var selectedModel: String = UserDefaults.standard.string(forKey: "selectedModel") ?? APIProvider.current().defaultModel
     @State private var hotkeyDisplay: String = HotkeyConfig.load().displayString
     @State private var isRecording = false
 
-    private let apiService = ClaudeAPIService()
-    private let availableModels = [
-        "claude-sonnet-4-5",
-        "claude-haiku-4-5"
-    ]
+    private let apiService = TranslationService()
 
     enum TestStatus: Equatable {
         case idle
@@ -24,12 +21,24 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section {
-                SecureField("Enter your API key", text: $apiKey)
+                Picker("Provider", selection: $selectedProvider) {
+                    ForEach(APIProvider.allCases) { provider in
+                        Text(provider.rawValue).tag(provider)
+                    }
+                }
+            } header: {
+                Text("API Provider")
+            } footer: {
+                Text("Choose one provider. Each has its own API key and models.")
+            }
+
+            Section {
+                SecureField("Enter your \(selectedProvider.rawValue) API key", text: $apiKey)
                     .textFieldStyle(.roundedBorder)
 
                 HStack {
                     Button("Save") {
-                        if KeychainManager.save(apiKey: apiKey) {
+                        if KeychainManager.save(apiKey: apiKey, for: selectedProvider) {
                             testStatus = .success
                         }
                     }
@@ -59,12 +68,12 @@ struct SettingsView: View {
                     }
                 }
             } header: {
-                Text("Claude API Key")
+                Text("API Key")
             }
 
             Section {
                 Picker("Model", selection: $selectedModel) {
-                    ForEach(availableModels, id: \.self) { model in
+                    ForEach(selectedProvider.availableModels, id: \.self) { model in
                         Text(model).tag(model)
                     }
                 }
@@ -89,15 +98,33 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 450, height: 340)
+        .frame(width: 450, height: 400)
         .onAppear {
-            if let savedKey = KeychainManager.load() {
-                apiKey = savedKey
+            loadSettings()
+        }
+        .onChange(of: selectedProvider) { _, newProvider in
+            newProvider.save()
+            apiKey = KeychainManager.load(for: newProvider) ?? ""
+            selectedModel = UserDefaults.standard.string(forKey: "selectedModel") ?? newProvider.defaultModel
+            if !newProvider.availableModels.contains(selectedModel) {
+                selectedModel = newProvider.defaultModel
             }
-            hotkeyDisplay = HotkeyConfig.load().displayString
+            testStatus = .idle
         }
         .onChange(of: selectedModel) { _, newValue in
             UserDefaults.standard.set(newValue, forKey: "selectedModel")
+        }
+    }
+
+    private func loadSettings() {
+        selectedProvider = .current()
+        apiKey = KeychainManager.load(for: selectedProvider) ?? ""
+        hotkeyDisplay = HotkeyConfig.load().displayString
+        let saved = UserDefaults.standard.string(forKey: "selectedModel") ?? selectedProvider.defaultModel
+        if selectedProvider.availableModels.contains(saved) {
+            selectedModel = saved
+        } else {
+            selectedModel = selectedProvider.defaultModel
         }
     }
 
@@ -105,7 +132,7 @@ struct SettingsView: View {
         testStatus = .testing
         Task {
             do {
-                let success = try await apiService.testConnection(apiKey: apiKey)
+                let success = try await apiService.testConnection(apiKey: apiKey, provider: selectedProvider)
                 await MainActor.run {
                     testStatus = success ? .success : .failure("Connection failed")
                 }
@@ -198,7 +225,6 @@ class KeyRecorderNSButton: NSButton {
             return
         }
 
-        // Esc to cancel
         if event.keyCode == UInt16(kVK_Escape) {
             state = .off
             onCancelled?()
@@ -208,9 +234,7 @@ class KeyRecorderNSButton: NSButton {
         let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
             .subtracting([.capsLock, .numericPad, .function])
 
-        // Must have at least one modifier (Ctrl, Option, Cmd, Shift)
         guard !modifiers.isEmpty else { return }
-        // Don't accept modifier-only presses
         let modifierKeyCodes: Set<UInt16> = [54, 55, 56, 57, 58, 59, 60, 61, 62, 63]
         guard !modifierKeyCodes.contains(event.keyCode) else { return }
 
@@ -226,9 +250,7 @@ class KeyRecorderNSButton: NSButton {
         onKeyRecorded?(config)
     }
 
-    override func flagsChanged(with event: NSEvent) {
-        // Ignore modifier-only events
-    }
+    override func flagsChanged(with event: NSEvent) {}
 }
 
 extension Notification.Name {
