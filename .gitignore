@@ -1,0 +1,18 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserdata/
+*.xcworkspace/xcuserdata/
+xcuserdata/
+
+# Build artifacts
+dist/
+*.dmg
+
+# macOS
+.DS_Store
+*.swp
+*~
+
+# OMC
+.omc/
