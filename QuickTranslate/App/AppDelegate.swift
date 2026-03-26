@@ -19,7 +19,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             TextCaptureService.requestAccessibility()
         }
 
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(hotkeyChanged(_:)),
+            name: .hotkeyChanged,
+            object: nil
+        )
+
         NSLog("[QuickTranslate] App launched, hotkey registered, accessibility: \(TextCaptureService.isAccessibilityGranted)")
+    }
+
+    @objc private func hotkeyChanged(_ notification: Notification) {
+        guard let config = notification.userInfo?["config"] as? HotkeyConfig else { return }
+        hotkeyManager.updateHotkey(config: config)
+        NSLog("[QuickTranslate] Hotkey changed to: \(config.displayString)")
     }
 
     func applicationWillTerminate(_ notification: Notification) {

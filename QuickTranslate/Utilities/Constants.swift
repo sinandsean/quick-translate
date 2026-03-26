@@ -11,7 +11,9 @@ enum Constants {
     static let keychainAccount = "claude-api-key"
 
     enum Hotkey {
-        static let displayString = "⌃T"
+        static var displayString: String {
+            HotkeyConfig.load().displayString
+        }
     }
 
     enum Panel {
