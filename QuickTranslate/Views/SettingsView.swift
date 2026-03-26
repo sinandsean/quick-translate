@@ -24,18 +24,18 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section {
-                SecureField("API 키를 입력하세요", text: $apiKey)
+                SecureField("Enter your API key", text: $apiKey)
                     .textFieldStyle(.roundedBorder)
 
                 HStack {
-                    Button("저장") {
+                    Button("Save") {
                         if KeychainManager.save(apiKey: apiKey) {
                             testStatus = .success
                         }
                     }
                     .disabled(apiKey.isEmpty)
 
-                    Button("연결 테스트") {
+                    Button("Test Connection") {
                         testConnection()
                     }
                     .disabled(apiKey.isEmpty)
@@ -49,7 +49,7 @@ struct SettingsView: View {
                         ProgressView()
                             .scaleEffect(0.6)
                     case .success:
-                        Label("연결 성공", systemImage: "checkmark.circle.fill")
+                        Label("Connected", systemImage: "checkmark.circle.fill")
                             .foregroundColor(.green)
                             .font(.caption)
                     case .failure(let message):
@@ -59,22 +59,22 @@ struct SettingsView: View {
                     }
                 }
             } header: {
-                Text("Claude API 키")
+                Text("Claude API Key")
             }
 
             Section {
-                Picker("모델", selection: $selectedModel) {
+                Picker("Model", selection: $selectedModel) {
                     ForEach(availableModels, id: \.self) { model in
                         Text(model).tag(model)
                     }
                 }
             } header: {
-                Text("번역 설정")
+                Text("Translation Settings")
             }
 
             Section {
                 HStack {
-                    Text("단축키")
+                    Text("Shortcut")
                     Spacer()
 
                     KeyRecorderButton(
@@ -83,9 +83,9 @@ struct SettingsView: View {
                     )
                 }
             } header: {
-                Text("단축키")
+                Text("Shortcut")
             } footer: {
-                Text("클릭 후 수정자 키(⌃⌥⇧⌘) + 일반 키 조합을 함께 누르세요. 예: ⌃T, ⌥D. Esc로 취소.")
+                Text("Click, then press a modifier key (⌃⌥⇧⌘) + a regular key. e.g. ⌃T, ⌥D. Press Esc to cancel.")
             }
         }
         .formStyle(.grouped)
@@ -107,7 +107,7 @@ struct SettingsView: View {
             do {
                 let success = try await apiService.testConnection(apiKey: apiKey)
                 await MainActor.run {
-                    testStatus = success ? .success : .failure("연결 실패")
+                    testStatus = success ? .success : .failure("Connection failed")
                 }
             } catch {
                 await MainActor.run {
@@ -161,7 +161,7 @@ struct KeyRecorderButton: NSViewRepresentable {
         @objc func buttonClicked(_ sender: KeyRecorderNSButton) {
             if sender.state == .on {
                 parent.isRecording = true
-                sender.title = "수정자 키 + 일반 키를 누르세요"
+                sender.title = "Press modifier + key"
                 sender.window?.makeFirstResponder(sender)
             } else {
                 parent.isRecording = false

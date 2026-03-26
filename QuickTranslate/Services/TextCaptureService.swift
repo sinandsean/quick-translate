@@ -10,11 +10,11 @@ enum TextCaptureError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .accessibilityNotGranted:
-            return "접근성 권한이 필요합니다. 시스템 설정 > 개인정보 보호 및 보안 > 접근성에서 QuickTranslate를 허용해주세요."
+            return "Accessibility permission required. Go to System Settings > Privacy & Security > Accessibility and enable QuickTranslate."
         case .noTextSelected:
-            return "선택된 텍스트가 없습니다. 번역할 텍스트를 선택한 후 다시 시도해주세요."
+            return "No text selected. Select text to translate and try again."
         case .captureFailed:
-            return "텍스트를 가져올 수 없습니다."
+            return "Failed to capture text."
         }
     }
 }

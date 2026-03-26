@@ -147,7 +147,7 @@ struct TranslationContentView: View {
                 VStack(spacing: 12) {
                     ProgressView()
                         .scaleEffect(0.8)
-                    Text("번역 중...")
+                    Text("Translating...")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -158,7 +158,7 @@ struct TranslationContentView: View {
                         HStack {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundColor(.orange)
-                            Text("오류")
+                            Text("Error")
                                 .font(.subheadline.bold())
                         }
                         Text(error)
@@ -195,7 +195,7 @@ struct TranslationContentView: View {
                                     NSPasteboard.general.clearContents()
                                     NSPasteboard.general.setString(result.translatedText, forType: .string)
                                 }) {
-                                    Label("복사", systemImage: "doc.on.doc")
+                                    Label("Copy", systemImage: "doc.on.doc")
                                         .font(.caption)
                                 }
                                 .buttonStyle(.bordered)

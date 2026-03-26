@@ -7,19 +7,19 @@ struct MenuBarContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Button("설정...") {
+            Button("Settings...") {
                 openSettings()
                 NSApp.activate(ignoringOtherApps: true)
             }
             .keyboardShortcut(",", modifiers: .command)
 
-            Button("접근성 권한 확인") {
+            Button("Check Accessibility") {
                 onCheckAccessibility()
             }
 
             Divider()
 
-            Button("QuickTranslate 종료") {
+            Button("Quit QuickTranslate") {
                 onQuit()
             }
             .keyboardShortcut("q", modifiers: .command)

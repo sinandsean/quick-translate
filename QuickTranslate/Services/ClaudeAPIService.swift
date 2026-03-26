@@ -11,17 +11,17 @@ enum ClaudeAPIError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noAPIKey:
-            return "API 키가 설정되지 않았습니다. 설정에서 API 키를 입력해주세요."
+            return "API key not set. Go to menu bar → Settings to enter your API key."
         case .invalidURL:
-            return "잘못된 API URL입니다."
+            return "Invalid API URL."
         case .networkError(let message):
-            return "네트워크 오류: \(message)"
+            return "Network error: \(message)"
         case .invalidResponse:
-            return "서버로부터 잘못된 응답을 받았습니다."
+            return "Invalid response from server."
         case .apiError(let message):
-            return "API 오류: \(message)"
+            return "API error: \(message)"
         case .timeout:
-            return "요청 시간이 초과되었습니다. (30초)"
+            return "Request timed out (30s)."
         }
     }
 }

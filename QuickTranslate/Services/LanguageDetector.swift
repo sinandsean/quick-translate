@@ -19,15 +19,15 @@ enum LanguageDetector {
             return DetectionResult(
                 sourceLanguage: "Korean",
                 targetLanguage: "English",
-                sourceDisplayName: "한국어",
-                targetDisplayName: "영어"
+                sourceDisplayName: "Korean",
+                targetDisplayName: "English"
             )
         } else {
             return DetectionResult(
                 sourceLanguage: "English",
                 targetLanguage: "Korean",
                 sourceDisplayName: "English",
-                targetDisplayName: "한국어"
+                targetDisplayName: "Korean"
             )
         }
     }

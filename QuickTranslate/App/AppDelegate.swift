@@ -48,7 +48,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard KeychainManager.load() != nil else {
             DispatchQueue.main.async {
-                self.appState.failTranslating(error: "API 키가 설정되지 않았습니다. 메뉴바 → 설정에서 API 키를 입력해주세요.")
+                self.appState.failTranslating(error: "API key not set. Go to menu bar → Settings to enter your API key.")
                 self.showPanel()
             }
             return
@@ -59,7 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         switch captureResult {
         case .failure(let error):
             DispatchQueue.main.async {
-                self.appState.failTranslating(error: error.errorDescription ?? "알 수 없는 오류")
+                self.appState.failTranslating(error: error.errorDescription ?? "Unknown error")
                 self.showPanel()
             }
         case .success(let text):

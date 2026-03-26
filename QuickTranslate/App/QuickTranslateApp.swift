@@ -11,8 +11,8 @@ struct QuickTranslateApp: App {
                 onCheckAccessibility: {
                     if TextCaptureService.isAccessibilityGranted {
                         let alert = NSAlert()
-                        alert.messageText = "접근성 권한"
-                        alert.informativeText = "접근성 권한이 허용되어 있습니다."
+                        alert.messageText = "Accessibility Permission"
+                        alert.informativeText = "Accessibility permission is granted."
                         alert.alertStyle = .informational
                         alert.runModal()
                     } else {
@@ -42,9 +42,9 @@ enum MenuBarIcon {
 
             let lineWidth: CGFloat = 1.5
 
-            // 한 (left side, small)
+            // Korean character (left side, small)
             let hanFont = NSFont.systemFont(ofSize: 7, weight: .bold)
-            let hanStr = NSAttributedString(string: "한", attributes: [
+            let hanStr = NSAttributedString(string: "K", attributes: [
                 .font: hanFont,
                 .foregroundColor: NSColor.black
             ])
@@ -85,7 +85,7 @@ enum MenuBarIcon {
             return true
         }
 
-        image.isTemplate = true // dark/light mode 자동 대응
+        image.isTemplate = true // auto dark/light mode support
         return image
     }
 }
