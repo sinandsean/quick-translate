@@ -8,6 +8,8 @@ struct SettingsView: View {
     @State private var selectedModel: String = UserDefaults.standard.string(forKey: "selectedModel") ?? APIProvider.current().defaultModel
     @State private var hotkeyDisplay: String = HotkeyConfig.load().displayString
     @State private var isRecording = false
+    @State private var languageA: SupportedLanguage = LanguagePair.load().languageA
+    @State private var languageB: SupportedLanguage = LanguagePair.load().languageB
 
     private let apiService = TranslationService()
 
@@ -72,6 +74,23 @@ struct SettingsView: View {
             }
 
             Section {
+                Picker("Language A", selection: $languageA) {
+                    ForEach(SupportedLanguage.allCases) { lang in
+                        Text(lang.rawValue).tag(lang)
+                    }
+                }
+                Picker("Language B", selection: $languageB) {
+                    ForEach(SupportedLanguage.allCases) { lang in
+                        Text(lang.rawValue).tag(lang)
+                    }
+                }
+            } header: {
+                Text("Language Pair")
+            } footer: {
+                Text("Auto-detects which language the text is in and translates to the other.")
+            }
+
+            Section {
                 Picker("Model", selection: $selectedModel) {
                     ForEach(selectedProvider.availableModels, id: \.self) { model in
                         Text(model).tag(model)
@@ -98,7 +117,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 450, height: 400)
+        .frame(width: 450, height: 500)
         .onAppear {
             loadSettings()
         }
@@ -113,6 +132,18 @@ struct SettingsView: View {
         }
         .onChange(of: selectedModel) { _, newValue in
             UserDefaults.standard.set(newValue, forKey: "selectedModel")
+        }
+        .onChange(of: languageA) { _, _ in
+            if languageA == languageB {
+                languageB = languageA == .english ? .korean : .english
+            }
+            LanguagePair(languageA: languageA, languageB: languageB).save()
+        }
+        .onChange(of: languageB) { _, _ in
+            if languageB == languageA {
+                languageA = languageB == .english ? .korean : .english
+            }
+            LanguagePair(languageA: languageA, languageB: languageB).save()
         }
     }
 
