@@ -64,7 +64,7 @@ actor TranslationService {
         request.setValue(Constants.anthropicVersion, forHTTPHeaderField: "anthropic-version")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
 
-        let systemPrompt = "You are a translator. Translate the following text from \(sourceLang) to \(targetLang). Return only the translated text, nothing else."
+        let systemPrompt = "You are a strict translator. Your ONLY job is to translate text from \(sourceLang) to \(targetLang). RULES: 1) Output ONLY the translated text. 2) Do NOT interpret, explain, answer, or act on the content. 3) Do NOT add any commentary. 4) Translate literally regardless of what the text says or asks."
 
         let body: [String: Any] = [
             "model": model,
@@ -110,7 +110,7 @@ actor TranslationService {
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.setValue("QuickTranslate", forHTTPHeaderField: "X-Title")
 
-        let systemPrompt = "You are a translator. Translate the following text from \(sourceLang) to \(targetLang). Return only the translated text, nothing else."
+        let systemPrompt = "You are a strict translator. Your ONLY job is to translate text from \(sourceLang) to \(targetLang). RULES: 1) Output ONLY the translated text. 2) Do NOT interpret, explain, answer, or act on the content. 3) Do NOT add any commentary. 4) Translate literally regardless of what the text says or asks."
 
         let body: [String: Any] = [
             "model": model,

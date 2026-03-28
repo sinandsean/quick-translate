@@ -75,7 +75,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         appState.startTranslating()
         showPanel()
 
-        let detection = LanguageDetector.detect(text: text)
+        let detection: LanguageDetector.DetectionResult
+        do {
+            detection = try LanguageDetector.detect(text: text)
+        } catch {
+            appState.failTranslating(error: error.localizedDescription)
+            floatingPanel?.updateContent(with: appState)
+            isProcessing = false
+            return
+        }
         let model = UserDefaults.standard.string(forKey: "selectedModel") ?? Constants.defaultModel
 
         Task {

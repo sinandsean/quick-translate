@@ -1,6 +1,17 @@
 import Foundation
 import NaturalLanguage
 
+enum LanguageDetectionError: LocalizedError {
+    case unsupportedLanguage(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .unsupportedLanguage(let lang):
+            return "Unsupported language detected: \(lang). Only Korean and English are supported."
+        }
+    }
+}
+
 enum LanguageDetector {
     struct DetectionResult {
         let sourceLanguage: String
@@ -9,26 +20,32 @@ enum LanguageDetector {
         let targetDisplayName: String
     }
 
-    static func detect(text: String) -> DetectionResult {
+    static func detect(text: String) throws -> DetectionResult {
         let recognizer = NLLanguageRecognizer()
         recognizer.processString(text)
 
-        let dominant = recognizer.dominantLanguage
+        guard let dominant = recognizer.dominantLanguage else {
+            throw LanguageDetectionError.unsupportedLanguage("Unknown")
+        }
 
-        if dominant == .korean {
+        switch dominant {
+        case .korean:
             return DetectionResult(
                 sourceLanguage: "Korean",
                 targetLanguage: "English",
                 sourceDisplayName: "Korean",
                 targetDisplayName: "English"
             )
-        } else {
+        case .english:
             return DetectionResult(
                 sourceLanguage: "English",
                 targetLanguage: "Korean",
                 sourceDisplayName: "English",
                 targetDisplayName: "Korean"
             )
+        default:
+            let langName = Locale.current.localizedString(forIdentifier: dominant.rawValue) ?? dominant.rawValue
+            throw LanguageDetectionError.unsupportedLanguage(langName)
         }
     }
 }
