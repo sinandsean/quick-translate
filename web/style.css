@@ -1,0 +1,199 @@
+/* QuickTranslate Landing — Clean, nerdy, utilitarian */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333;
+  background: #fff;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+a {
+  color: #0969da;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Nav */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 10px;
+}
+
+.nav-brand {
+  font-weight: 700;
+  font-size: 16px;
+  color: #333;
+}
+
+.nav-brand:hover {
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  gap: 18px;
+  font-size: 14px;
+}
+
+/* Hero */
+.hero {
+  padding: 30px 0 20px;
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.tagline {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 24px;
+}
+
+kbd {
+  font-family: "SF Mono", Menlo, Monaco, "Courier New", monospace;
+  font-size: 0.9em;
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
+/* Download */
+.download-box {
+  background: #f6f8fa;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 20px;
+  margin-top: 10px;
+}
+
+.btn-download {
+  display: inline-block;
+  background: #2ea44f;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+.btn-download:hover {
+  background: #2c974b;
+  text-decoration: none;
+}
+
+.download-meta {
+  font-size: 13px;
+  color: #666;
+  margin-top: 10px;
+}
+
+.download-note {
+  font-size: 13px;
+  color: #1a7f37;
+  margin-top: 4px;
+}
+
+/* Sections */
+section {
+  padding: 20px 0;
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+section p {
+  margin-bottom: 12px;
+}
+
+ul, ol {
+  padding-left: 24px;
+  margin-bottom: 12px;
+}
+
+li {
+  margin-bottom: 6px;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 8px 0;
+}
+
+/* Ad Slots */
+.ad-slot {
+  text-align: center;
+  margin: 16px 0;
+}
+
+.ad-banner {
+  min-height: 90px;
+}
+
+.ad-rectangle {
+  min-height: 250px;
+}
+
+.ad-placeholder {
+  background: #f6f8fa;
+  border: 1px dashed #ccc;
+  color: #999;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: inherit;
+}
+
+/* Footer */
+footer {
+  padding: 20px 0;
+  border-top: 1px solid #ddd;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #666;
+  text-align: center;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .nav-links {
+    gap: 12px;
+    font-size: 13px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  .btn-download {
+    font-size: 14px;
+    padding: 8px 18px;
+  }
+}
